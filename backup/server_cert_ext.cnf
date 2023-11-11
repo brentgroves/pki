@@ -1,0 +1,13 @@
+basicConstraints = CA:FALSE
+nsCertType = server
+nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+authorityInfoAccess = OCSP;URI:http://ocsp.my.host/
+authorityInfoAccess = caIssuers;URI:http://my.ca/ca.html
+
+[alt_names]
+DNS.1 = moto.busche-cnc.com

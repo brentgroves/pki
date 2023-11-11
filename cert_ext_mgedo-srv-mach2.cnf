@@ -1,0 +1,16 @@
+basicConstraints = CA:FALSE
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+authorityInfoAccess = OCSP;URI:http://ocsp.busche-cnc.com/,caIssuers;URI:http://busche-cnc.com/ca.html
+# https://security.stackexchange.com/questions/252622/what-is-the-purpose-of-certificatepolicies-in-a-csr-how-should-an-oid-be-used
+# added because: ERROR	No policy extension
+# For general purpose CAs, you can use a universal Object Identifier with the value 2.5.29.32.0. This identifier means “All Issuance Policies” and is a sort of wildcard policy. Any policy will match this identifier during certificate chain validation.
+# certificatePolicies = 2.5.29.32.0
+# https://security.stackexchange.com/questions/264110/how-to-determine-validation-process-of-a-certificate-used-by-a-website-using-htt
+certificatePolicies = 2.23.140.1.2.1, 2.5.29.32.0
+# certificatePolicies = 1.2.3.4
+[alt_names]
+DNS.1 = mgedo-srv-mach2.busche-cnc.com

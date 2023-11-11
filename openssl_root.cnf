@@ -1,0 +1,92 @@
+[ ca ]                                                   # The default CA section
+default_ca = CA_default                                  # The default CA name
+
+[ CA_default ]                                           # Default settings for the CA
+dir               = /home/brent/src/reports/volume/pki/rootCA                    # CA directory
+certs             = $dir/certs                           # Certificates directory
+crl_dir           = $dir/crl                             # CRL directory
+new_certs_dir     = $dir/newcerts                        # New certificates directory
+database          = $dir/index.txt                       # Certificate index file
+serial            = $dir/serial                          # Serial number file
+RANDFILE          = $dir/private/.rand                   # Random number file
+private_key       = $dir/private/ca.key.pem              # Root CA private key
+certificate       = $dir/certs/ca.cert.pem               # Root CA certificate
+crl               = $dir/crl/ca.crl.pem                  # Root CA CRL
+crlnumber         = $dir/crlnumber                       # Root CA CRL number
+crl_extensions    = crl_ext                              # CRL extensions
+default_crl_days  = 30                                   # Default CRL validity days
+default_md        = sha256                               # Default message digest
+preserve          = no                                   # Preserve existing extensions
+email_in_dn       = no                                   # Exclude email from the DN
+name_opt          = ca_default                           # Formatting options for names
+cert_opt          = ca_default                           # Certificate output options
+policy            = policy_strict                        # Certificate policy
+unique_subject    = no                                   # Allow multiple certs with the same DN
+
+[ policy_strict ]                                        # Policy for stricter validation
+countryName             = match                          # Must match the issuer's country
+stateOrProvinceName     = match                          # Must match the issuer's state
+organizationName        = match                          # Must match the issuer's organization
+organizationalUnitName  = optional                       # Organizational unit is optional
+# INFO	Subject has a deprecated CommonName
+# dont use this in openssl_intermediate_for_san_certificate.cnf
+commonName              = supplied                       # Must provide a common name
+emailAddress            = optional                       # Email address is optional
+
+[ req ]                                                  # Request settings
+default_bits        = 2048                               # Default key size
+distinguished_name  = req_distinguished_name             # Default DN template
+string_mask         = utf8only                           # UTF-8 encoding
+default_md          = sha256                             # Default message digest
+prompt              = no                                 # Non-interactive mode
+
+[ req_distinguished_name ]                               # Template for the DN in the CSR
+countryName                     = Country Name (2 letter code)
+stateOrProvinceName             = State or Province Name (full name)
+localityName                    = Locality Name (city)
+0.organizationName              = Organization Name (company)
+# ERROR	OrganizationalUnitName is prohibited if...the certificate was issued on or after September 1, 2022
+# organizationalUnitName          = Organizational Unit Name (section)
+# INFO	Subject has a deprecated CommonName
+# dont use this in openssl_intermediate_for_san_certificate.cnf
+commonName              = supplied                       # Must provide a common name
+# cablint	INFO	Name has deprecated attribute emailAddress
+# emailAddress                    = Email Address
+
+[ v3_ca ]                                           # Root CA certificate extensions
+subjectKeyIdentifier = hash                         # Subject key identifier
+authorityKeyIdentifier = keyid:always,issuer        # Authority key identifier
+basicConstraints = critical, CA:true                # Basic constraints for a CA
+# CA certificates without Digital Signature do not allow direct signing of OCSP responses
+# https://www.openssl.org/docs/manmaster/man5/x509v3_config.html
+keyUsage = critical, keyCertSign, digitalSignature, cRLSign           # Key usage for a CA
+
+[ crl_ext ]                                         # CRL extensions
+authorityKeyIdentifier = keyid:always,issuer        # Authority key identifier
+
+[ v3_intermediate_ca ]                                      # Intermediate CA certificate extensions
+subjectKeyIdentifier = hash                                 # Subject key identifier
+# https://github.com/OpenVPN/easy-rsa/issues/417
+# authorityKeyIdentifier = keyid,issuer                       # Authority key identifier linking the certificate to the issuer's public key.
+authorityKeyIdentifier = keyid:always                       # Authority key identifier
+basicConstraints = critical, CA:true, pathlen:0             # Basic constraints for a CA
+# CA certificates without Digital Signature do not allow direct signing of OCSP responses
+# https://www.openssl.org/docs/manmaster/man5/x509v3_config.html
+keyUsage = critical, keyCertSign, digitalSignature, cRLSign           # Key usage for a CA
+# For general purpose CAs, you can use a universal Object Identifier with the value 2.5.29.32.0. This identifier means “All Issuance Policies” and is a sort of wildcard policy. Any policy will match this identifier during certificate chain validation.
+# https://security.stackexchange.com/questions/264110/how-to-determine-validation-process-of-a-certificate-used-by-a-website-using-htt
+# For general purpose CAs, you can use a universal Object Identifier with the value 2.5.29.32.0. This identifier means “All Issuance Policies” and is a sort of wildcard policy. Any policy will match this identifier during certificate chain validation.
+# certificatePolicies = 2.5.29.32.0 # any policy
+# certificatePolicies = 2.23.140.1.2.1 # validation policy
+
+# https://security.stackexchange.com/questions/264110/how-to-determine-validation-process-of-a-certificate-used-by-a-website-using-htt
+certificatePolicies = 2.23.140.1.2.1, 2.5.29.32.0
+# https://security.stackexchange.com/questions/252622/what-is-the-purpose-of-certificatepolicies-in-a-csr-how-should-an-oid-be-used
+# certificatePolicies = 1.2.3.4
+# ERROR	Subordinate CA Certificate: cRLDistributionPoints MUST be present and MUST NOT be marked critical.
+crlDistributionPoints=URI:http://busche-cnc.com/crl.pem
+# zlint	NOTICE	To be considered Technically Constrained, the Subordinate CA certificate MUST have extkeyUsage extension
+extendedKeyUsage = serverAuth                               # Extended key usage for server authentication purposes (e.g., TLS/SSL servers).
+# authorityInfoAccess = OCSP;URI:http://ocsp.busche-cnc.com/
+# authorityInfoAccess = caIssuers;URI:http://busche-cnc.com/ca.html
+authorityInfoAccess = OCSP;URI:http://ocsp.busche-cnc.com/,caIssuers;URI:http://busche-cnc.com/ca.html
