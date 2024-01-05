@@ -150,6 +150,9 @@ openssl verify -CAfile ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca
 # Sam exported this private key after generating a certificate from Niagara for frt-kors43.
 
 # We generated the following private keys for various report system K8s cluster. 
+# reports1 kong ingress controller
+openssl genpkey -algorithm RSA \
+-out ~/src/repsys/volumes/pki/intermediateCA/private/reports1.busche-cnc.com.san.key.pem
 # reports51
 openssl genpkey -algorithm RSA \
 -out ~/src/repsys/volumes/pki/intermediateCA/private/reports51.busche-cnc.com.san.key.pem
@@ -204,6 +207,13 @@ openssl req \
 -new -sha256 \
 -out ~/src/repsys/volumes/pki/intermediateCA/csr/reports-alb.busche-cnc.com.san.csr.pem
 
+# reports1 for kong ingress control
+openssl req \
+-config ~/src/repsys/volumes/pki/openssl_intermediate_for_san_certificate.cnf \
+-key ~/src/repsys/volumes/pki/intermediateCA/private/reports1.busche-cnc.com.san.key.pem \
+-new -sha256 \
+-out ~/src/repsys/volumes/pki/intermediateCA/csr/reports1.busche-cnc.com.san.csr.pem
+
 # reports11
 openssl req \
 -config ~/src/repsys/volumes/pki/openssl_intermediate_for_san_certificate.cnf \
@@ -240,6 +250,15 @@ openssl req \
 -out ~/src/repsys/volumes/pki/intermediateCA/csr/frt-kors43.busche-cnc.com.san.csr.pem
 
 # Sign the CSR with our certificate chain bundle and intermediate certificates private key to create a Subject Alternative Name, SAN, certificate.  Make sure to create a new configuration file such as, cert_ext_reports11.cnf, for each server. This config file contains the FQDN in which the certificate is valid for.  These certificates are only valid for 1 year which is a minimum now imposed by browsers.
+
+# reports1 for kong ingress controller
+openssl x509 -req \
+-in /home/brent/src/repsys/volumes/pki/intermediateCA/csr/reports11.busche-cnc.com.san.csr.pem \
+-CA /home/brent/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca-chain-bundle.cert.pem \
+-CAkey /home/brent/src/repsys/volumes/pki/intermediateCA/private/intermediate.key.pem \
+-out /home/brent/src/repsys/volumes/pki/intermediateCA/certs/reports11.busche-cnc.com.san.cert.pem \
+-CAcreateserial -days 365 -sha256 \
+-extfile /home/brent/src/repsys/volumes/pki/cert_ext_reports11.cnf
 
 # reports11
 openssl x509 -req \
@@ -389,6 +408,8 @@ error 2 at 1 depth lookup: unable to get issuer certificate
 # ok
 openssl verify -CAfile ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca-chain-bundle.cert.pem ~/src/repsys/volumes/pki/intermediateCA/certs/reports51.busche-cnc.com.san.cert.pem
 
+openssl verify -CAfile ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca-chain-bundle.cert.pem ~/src/repsys/volumes/pki/intermediateCA/certs/reports1.busche-cnc.com.san.cert.pem
+
 openssl verify -CAfile ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca-chain-bundle.cert.pem ~/src/repsys/volumes/pki/intermediateCA/certs/reports11.busche-cnc.com.san.cert.pem
 
 openssl verify -CAfile ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca-chain-bundle.cert.pem ~/src/repsys/volumes/pki/intermediateCA/certs/hrt-kors43.busche-cnc.com.san.cert.pem
@@ -400,6 +421,8 @@ openssl verify -CAfile ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca
 openssl verify -CAfile ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca-chain-bundle.cert.pem ~/src/repsys/volumes/pki/intermediateCA/certs/reports-alb.busche-cnc.com.san.cert.pem
 
 # Make the cert chain for nginx. this does not include the SAN certificates private key.
+cat ~/src/repsys/volumes/pki/intermediateCA/certs/reports1.busche-cnc.com.san.cert.pem ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca-chain-bundle.cert.pem  > ~/src/repsys/volumes/pki/intermediateCA/certs/server-chain/reports1.busche-cnc.com-ca-chain-bundle.cert.pem
+
 cat ~/src/repsys/volumes/pki/intermediateCA/certs/reports51.busche-cnc.com.san.cert.pem ~/src/repsys/volumes/pki/intermediateCA/certs/ca-chain/ca-chain-bundle.cert.pem  > ~/src/repsys/volumes/pki/intermediateCA/certs/server-chain/reports51.busche-cnc.com-ca-chain-bundle.cert.pem
 
 
@@ -599,3 +622,8 @@ Certificate Verification with Schannel and Secure Transport
 If libcurl was built with Schannel (Microsoft's native TLS engine) or Secure Transport (Apple's native TLS engine) support, then libcurl will still perform peer certificate verification, but instead of using a CA cert bundle, it will use the certificates that are built into the OS. These are the same certificates that appear in the Internet Options control panel (under Windows) or Keychain Access application (under OS X). Any custom security rules for certificates will be honored.
 
 Schannel will run CRL checks on certificates unless peer verification is disabled. Secure Transport on iOS will run OCSP checks on certificates unless peer verification is disabled. Secure Transport on OS X will run either OCSP or CRL checks on certificates if those features are enabled, and this behavior can be adjusted in the preferences of Keychain Access.
+
+
+https://www.cloudflare.com/learning/ssl/what-is-sni/
+## What is SNI? How TLS server name indication works
+SNI, or Server Name Indication, is an addition to the TLS encryption protocol that enables a client device to specify the domain name it is trying to reach in the first step of the TLS handshake, preventing common name mismatch errors.
